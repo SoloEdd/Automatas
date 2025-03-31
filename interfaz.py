@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext
 import re
 
+#******************
 # Definir palabras reservadas de ejemplo
 RESERVED_WORDS = {"if", "else", "while", "for", "def", "return", "class", "import", "from", "as"}
 
@@ -42,3 +43,6 @@ root.config(menu=menu_bar)
 
 # Iniciar la aplicación
 root.mainloop()
+
+#cambio de prueba
+#******************
