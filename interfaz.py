@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import filedialog, scrolledtext
 import re
+from tabla_simbolos import crear_archivo, tokenizar, leer_simbolos
+
 
 #******************
 # Definir palabras reservadas de ejemplo
@@ -32,6 +34,16 @@ def add_error_message(message):
     error_widget.config(state=tk.DISABLED)
     error_widget.see(tk.END)
 
+def analizar_codigo():
+    crear_archivo()
+    codigo = text_widget.get("1.0", tk.END)
+    tokens = tokenizar(codigo)
+    add_error_message("Análisis completado. Tokens generados:")
+    for t in tokens:
+        add_error_message(f"  -> {t}")
+    leer_simbolos()
+
+
 # Crear la ventana principal
 root = tk.Tk()
 root.title("Editor de Código")
@@ -58,9 +70,15 @@ error_widget.pack(fill=tk.BOTH, expand=True)
 
 # Crear el menú
 menu_bar = tk.Menu(root)
+
 file_menu = tk.Menu(menu_bar, tearoff=0)
 file_menu.add_command(label="Abrir", command=open_file)
 menu_bar.add_cascade(label="Archivo", menu=file_menu)
+
+analizar_menu = tk.Menu(menu_bar, tearoff=0)
+analizar_menu.add_command(label="Analizar Código", command=analizar_codigo)
+menu_bar.add_cascade(label="Analizar", menu=analizar_menu)
+
 root.config(menu=menu_bar)
 
 # Barra de desplazamiento para errores
