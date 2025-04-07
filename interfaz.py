@@ -43,7 +43,6 @@ def analizar_codigo():
         add_error_message(f"  -> {t}")
     leer_simbolos()
 
-
 # Crear la ventana principal
 root = tk.Tk()
 root.title("Editor de Código")
