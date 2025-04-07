@@ -3,7 +3,6 @@ from tkinter import filedialog, scrolledtext
 import re
 from tabla_simbolos import crear_archivo, tokenizar, leer_simbolos
 
-
 #******************
 # Definir palabras reservadas de ejemplo
 RESERVED_WORDS = {"if", "else", "while", "for", "def", "return", "class", "import", "from", "as"}
@@ -34,6 +33,7 @@ def add_error_message(message):
     error_widget.config(state=tk.DISABLED)
     error_widget.see(tk.END)
 
+# Nueva función para analizar código
 def analizar_codigo():
     crear_archivo()
     codigo = text_widget.get("1.0", tk.END)
@@ -42,6 +42,16 @@ def analizar_codigo():
     for t in tokens:
         add_error_message(f"  -> {t}")
     leer_simbolos()
+
+# Función para compilar el código
+def compilar():
+    # Vaciar el área de errores
+    error_widget.config(state=tk.NORMAL)
+    error_widget.delete(1.0, tk.END)
+    error_widget.config(state=tk.DISABLED)
+    
+    # Analizar el código ingresado
+    analizar_codigo()
 
 # Crear la ventana principal
 root = tk.Tk()
@@ -70,14 +80,22 @@ error_widget.pack(fill=tk.BOTH, expand=True)
 # Crear el menú
 menu_bar = tk.Menu(root)
 
+# Menú archivo
 file_menu = tk.Menu(menu_bar, tearoff=0)
 file_menu.add_command(label="Abrir", command=open_file)
 menu_bar.add_cascade(label="Archivo", menu=file_menu)
 
+# Menú analizar
 analizar_menu = tk.Menu(menu_bar, tearoff=0)
 analizar_menu.add_command(label="Analizar Código", command=analizar_codigo)
 menu_bar.add_cascade(label="Analizar", menu=analizar_menu)
 
+# Menú compilar
+compilar_menu = tk.Menu(menu_bar, tearoff=0)
+compilar_menu.add_command(label="Compilar", command=compilar)
+menu_bar.add_cascade(label="Compilación", menu=compilar_menu)
+
+# Asignar el menú a la ventana
 root.config(menu=menu_bar)
 
 # Barra de desplazamiento para errores
@@ -87,13 +105,6 @@ error_widget.config(yscrollcommand=error_scroll.set)
 error_scroll.config(command=error_widget.yview)
 
 main_panel.add(error_frame)
-
-# Configurar el menú
-menu_bar = tk.Menu(root)
-file_menu = tk.Menu(menu_bar, tearoff=0)
-file_menu.add_command(label="Abrir", command=open_file)
-menu_bar.add_cascade(label="Archivo", menu=file_menu)
-root.config(menu=menu_bar)
 
 # Configurar tags para errores
 error_widget.tag_config("error", foreground="red")
