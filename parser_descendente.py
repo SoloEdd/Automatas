@@ -14,7 +14,6 @@ def tokenizar(codigo):
             pos += 1
     return tokens
 
-
 # --- Parser (descendente recursivo) ---
 tokens = []
 indice = 0
@@ -33,47 +32,88 @@ def match(esperado):
         raise SyntaxError(f"Error: Se esperaba '{esperado}' y se encontró '{obtener_token()}'")
 
 def parse_programa():
+    while obtener_token() in {"int", "float", "bool"}:
+        parse_declaracion()
+    while obtener_token() == "def":
+        parse_funcion()
     parse_sentencias()
-    if obtener_token() is not None:
-        raise SyntaxError("Código inválido: tokens adicionales encontrados.")
+
+def parse_declaracion():
+    tipo = obtener_token()
+    if tipo in {"int", "float", "bool"}:
+        match(tipo)
+        match(obtener_token())  # id
+        match(";")
+    else:
+        raise SyntaxError("Se esperaba tipo de variable")
+    
+def parse_funcion():
+    match("def")
+    match(obtener_token())  # nombre de la función
+    match("(")
+    match(")")
+    match("{")
+    parse_sentencias()
+    match("}")
 
 def parse_sentencias():
-    while obtener_token() in {"if", "while"} or es_identificador(obtener_token()):
+    while obtener_token() in {"if", "while", "for"} or es_identificador(obtener_token()):
         parse_sentencia()
 
 def parse_sentencia():
     token = obtener_token()
     if token == "if":
-        match("if")
-        match("(")
-        parse_condicion()
-        match(")")
-        match("{")
-        parse_sentencias()
-        match("}")
-        if obtener_token() == "else":
-            match("else")
-            match("{")
-            parse_sentencias()
-            match("}")
+        parse_decision()
     elif token == "while":
-        match("while")
-        match("(")
-        parse_condicion()
-        match(")")
-        match("{")
-        parse_sentencias()
-        match("}")
+        parse_while()
+    elif token == "for":
+        parse_for()
     elif es_identificador(token):
         parse_asignacion()
     else:
         raise SyntaxError(f"Sentencia no válida: {token}")
+
 
 def parse_asignacion():
     match(obtener_token())
     match("=")
     parse_expresion()
     match(";")
+
+def parse_decision():
+    match("if")
+    match("(")
+    parse_condicion()
+    match(")")
+    match("{")
+    parse_sentencias()
+    match("}")
+    if obtener_token() == "else":
+        match("else")
+        match("{")
+        parse_sentencias()
+        match("}")
+
+def parse_while():
+    match("while")
+    match("(")
+    parse_condicion()
+    match(")")
+    match("{")
+    parse_sentencias()
+    match("}")
+
+def parse_for():
+    match("for")
+    match("(")
+    parse_asignacion()
+    parse_condicion()
+    match(";")
+    parse_asignacion()
+    match(")")
+    match("{")
+    parse_sentencias()
+    match("}")
 
 def parse_expresion():
     token = obtener_token()
@@ -103,4 +143,6 @@ def analizar_sintaxis(codigo):
     tokens = tokenizar(codigo)
     indice = 0
     parse_programa()
+    if obtener_token() is not None:
+        raise SyntaxError("Código inválido: tokens adicionales encontrados.")
     return "Análisis sintáctico exitoso"
