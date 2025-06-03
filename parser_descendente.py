@@ -1,12 +1,12 @@
 import re
 from tabla_simbolos import crear_archivo, agregar_simbolo, leer_simbolos, es_identificador
 
-RESERVED_WORDS = {"if", "else", "while", "int", "float", "return", "main"}
+RESERVED_WORDS = {"if", "else", "while", "int", "float", "return", "main", "def"}
 direccion_base = 2000
 
 # --- Tokenizar (Lexer) ---
 def tokenizar(codigo):
-    tokens = re.findall(r"(==|!=|<=|>=|[()\{\};=+\-*/<>]|\w+)", codigo)
+    tokens = re.findall(r"(==|!=|<=|>=|[()\{\},;=+\-*/<>]|\w+)", codigo)
     pos = 0
     for token in tokens:
         if es_identificador(token) and token not in RESERVED_WORDS:
@@ -42,34 +42,70 @@ def parse_declaracion():
     tipo = obtener_token()
     if tipo in {"int", "float", "bool"}:
         match(tipo)
-        match(obtener_token())  # id
+        nombre_var = obtener_token()
+        if not es_identificador(nombre_var):
+            raise SyntaxError(f"Nombre de variable inválido: {nombre_var}")
+        match(nombre_var)
+        
+        # Parte opcional de inicialización
+        if obtener_token() == "=":
+            match("=")
+            parse_expresion()
+            
         match(";")
     else:
-        raise SyntaxError("Se esperaba tipo de variable")
+        raise SyntaxError("Se esperaba tipo de variable (int/float/bool)")
     
 def parse_funcion():
     match("def")
-    match(obtener_token())  # nombre de la función
+    nombre_funcion = obtener_token()
+    if not es_identificador(nombre_funcion):
+        raise SyntaxError(f"Nombre de función inválido: {nombre_funcion}")
+    match(nombre_funcion)
     match("(")
+    parse_parametros()
     match(")")
+    parse_bloque() 
+
+def parse_parametros():
+    token = obtener_token()
+    if token != ")":  # Si no hay parámetros
+        if not es_identificador(token):
+            raise SyntaxError(f"Identificador de parámetro inválido: {token}")
+        match(token)
+        while obtener_token() == ",":
+            match(",")
+            token = obtener_token()
+            if not es_identificador(token):
+                raise SyntaxError(f"Identificador de parámetro inválido: {token}")
+            match(token)
+
+def parse_bloque():
     match("{")
     parse_sentencias()
     match("}")
 
 def parse_sentencias():
-    while obtener_token() in {"if", "while", "for"} or es_identificador(obtener_token()):
+    while obtener_token() not in {"}", None}:
         parse_sentencia()
 
 def parse_sentencia():
     token = obtener_token()
-    if token == "if":
+    if token in {"int", "float", "bool"}:
+        parse_declaracion()
+    elif token == "if":
         parse_decision()
     elif token == "while":
         parse_while()
     elif token == "for":
         parse_for()
     elif es_identificador(token):
-        parse_asignacion()
+        siguiente = tokens[indice + 1] if indice + 1 < len(tokens) else None
+        if siguiente == "=":
+            parse_asignacion()
+        else:
+            parse_expresion()
+            match(";")
     else:
         raise SyntaxError(f"Sentencia no válida: {token}")
 
@@ -85,35 +121,27 @@ def parse_decision():
     match("(")
     parse_condicion()
     match(")")
-    match("{")
-    parse_sentencias()
-    match("}")
+    parse_bloque()
     if obtener_token() == "else":
         match("else")
-        match("{")
-        parse_sentencias()
-        match("}")
+        parse_bloque()
 
 def parse_while():
     match("while")
     match("(")
     parse_condicion()
     match(")")
-    match("{")
-    parse_sentencias()
-    match("}")
+    parse_bloque()
 
 def parse_for():
     match("for")
     match("(")
-    parse_asignacion()
+    parse_declaracion()
     parse_condicion()
     match(";")
     parse_asignacion()
     match(")")
-    match("{")
-    parse_sentencias()
-    match("}")
+    parse_bloque()
 
 def parse_expresion():
     token = obtener_token()
@@ -132,7 +160,7 @@ def parse_expresion():
 def parse_condicion():
     parse_expresion()
     token = obtener_token()
-    if token in {"==", "!=", ">", "<"}:
+    if token in {"==", "!=", ">", "<", ">=", "<="}:
         match(token)
         parse_expresion()
     else:
@@ -141,6 +169,7 @@ def parse_condicion():
 def analizar_sintaxis(codigo):
     global tokens, indice
     tokens = tokenizar(codigo)
+    print("Tokens:", tokens)
     indice = 0
     parse_programa()
     if obtener_token() is not None:

@@ -5,7 +5,7 @@ from parser_descendente import analizar_sintaxis, leer_simbolos
 from tabla_simbolos import crear_archivo
 
 
-RESERVED_WORDS = {"if", "else", "while", "for", "def", "return", "class", "import", "from", "as", "int", "float", "void", "main"}
+RESERVED_WORDS = {"if", "else", "while", "for", "def", "bool", "int", "float"}
 
 def open_file():
     filepath = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")])
